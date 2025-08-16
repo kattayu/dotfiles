@@ -1,16 +1,14 @@
 # 環境変数
 export LANG=ja_JP.UTF-8
 export LSCOLORS=gxfxcxdxbxegedabagacad
+export CLICOLOR=1
 
 # ヒストリの設定
 HISTFILE=~/.zsh_history
 HISTSIZE=30000
 SAVEHIST=30000
-# 直前のコマンドの重複を削除
 setopt hist_ignore_dups
-# 同じコマンドをヒストリに残さない
 setopt hist_ignore_all_dups
-# 同時に起動したzshの間でヒストリを共有
 setopt share_history
 
 # 補完機能を有効にする
@@ -30,19 +28,16 @@ elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
     fi
 fi
 
-# 補完で小文字でも大文字にマッチさせる
+# 補完設定
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
-# 補完候補を詰めて表示
 setopt list_packed
-# 補完候補一覧をカラー表示
 zstyle ':completion:*' list-colors ''
 
-# コマンドのスペルを訂正
+# その他設定
 setopt correct
-# ビープ音を鳴らさない
 setopt no_beep
 
-# prompt
+# Git情報表示設定
 autoload -Uz vcs_info
 setopt prompt_subst
 zstyle ':vcs_info:git:*' check-for-changes true
@@ -50,39 +45,39 @@ zstyle ':vcs_info:git:*' stagedstr "%F{magenta}!"
 zstyle ':vcs_info:git:*' unstagedstr "%F{yellow}+"
 zstyle ':vcs_info:*' formats "%F{cyan}%c%u[%b]%f"
 zstyle ':vcs_info:*' actionformats '[%b|%a]'
-precmd() { vcs_info }
-PROMPT='%T %~ %F{magenta}$%f '
+
+# Git現在のbranch名を表示（*付きで）
+parse_git_branch() {
+    BRANCH=$(git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/')
+    if [ -n "$BRANCH" ]; then
+        # 変更があるかチェック
+        if ! git diff --quiet 2>/dev/null || ! git diff --cached --quiet 2>/dev/null || [ -n "$(git ls-files --others --exclude-standard 2>/dev/null)" ]; then
+            echo " (* $BRANCH)"
+        else
+            echo " ($BRANCH)"
+        fi
+    fi
+}
+
+# プロンプト設定（統合版）
+precmd() {
+    vcs_info
+    PROMPT='%* %F{cyan}%~%f%F{yellow}$(parse_git_branch) %F{magenta}$ %f'
+}
 RPROMPT='${vcs_info_msg_0_}'
 
-# alias
+# エイリアス
 alias gs='git status'
 alias ga='git add .'
 alias gc='git commit -m'
 alias gp='git push'
 
-export CLICOLOR=1
-export LSCOLORS=DxGxcxdxCxegedabagacad
-
-# git 現在のbranch名を表示
-parse_git_branch() {
-    BRANCH=$(git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/')
-    if [ -n "$BRANCH" ]; then
-        echo " ($BRANCH)"
-    else
-        echo ""
-    fi
-}
-
-precmd() {
-    PROMPT='%* %F{cyan}%~%f%F{yellow}$(parse_git_branch) %F{magenta}$ %f'
-}
-
-# プラグインを有効化（OS別対応）
+# プラグインを有効化（OS別対応を維持）
 if [[ "$OSTYPE" == "darwin"* ]]; then
     # macOS（Homebrew）環境
     if command -v brew >/dev/null 2>&1; then
-        source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-        source $(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+        source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh 2>/dev/null
+        source $(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh 2>/dev/null
     fi
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
     # Linux（Dev Container）環境
