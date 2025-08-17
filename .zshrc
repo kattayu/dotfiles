@@ -88,3 +88,8 @@ elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
         source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
     fi
 fi
+
+# Dev Container環境での履歴永続化
+if [ -n "$REMOTE_CONTAINERS" ] && [ -d ~/.zsh ]; then
+    export HISTFILE=~/.zsh/history
+fi
