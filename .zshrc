@@ -4,7 +4,7 @@ export LSCOLORS=gxfxcxdxbxegedabagacad
 export CLICOLOR=1
 
 # ヒストリの設定
-HISTFILE=~/.zsh_history
+HISTFILE=~/.zsh/history
 HISTSIZE=30000
 SAVEHIST=30000
 setopt hist_ignore_dups
@@ -90,6 +90,8 @@ elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
 fi
 
 # Dev Container環境での履歴永続化
-if [ -n "$REMOTE_CONTAINERS" ] && [ -d ~/.zsh ]; then
-    export HISTFILE=~/.zsh/history
+if [ -n "$REMOTE_CONTAINERS" ] && [ ! -d ~/.zsh ]; then
+    mkdir -p ~/.zsh
+    touch ~/.zsh/history
+    chmod 600 ~/.zsh/history
 fi
